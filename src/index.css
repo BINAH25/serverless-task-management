@@ -1,0 +1,91 @@
+/* App.css */
+
+.App {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f7f7f7;
+  max-width: 1200px; /* Increased for layout space */
+  margin: 0 auto;
+  display: flex; /* Flexbox for layout */
+  justify-content: space-between; /* Space between children */
+  gap: 20px; /* Gap between columns */
+}
+
+.task-list {
+  flex: 1; /* Occupy remaining space */
+}
+
+.create-task {
+  flex: 0.4; /* Take less space */
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.task-list ul {
+  padding: 0;
+  list-style-type: none;
+}
+
+.task-list li {
+  margin-bottom: 10px;
+}
+
+h1 {
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+input, textarea, select {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button:active {
+  background-color: #397d3b;
+}
+
+button:disabled {
+  background-color: #dcdcdc;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  background-color: #f9f9f9;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+li button {
+  margin-left: 10px;
+}
