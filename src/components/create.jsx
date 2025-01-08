@@ -27,8 +27,6 @@ const CreateTask = ({ onCreate }) => {
           email: user.Attributes.find(attribute => attribute.Name === 'email')?.Value,
           username: user.Username
         }));
-        
-        console.log(pools); // Logs the array of extracted email and username objects
         setUsers(pools); // Save the extracted users data
       } catch (error) {
         console.error("Error fetching tasks:", error);

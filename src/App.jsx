@@ -7,33 +7,64 @@ import CreateTask from "./components/create";
 import UpdateTask from "./components/update";
 import TaskList from "./components/taskList";
 import UserList from "./components/userList";
+import UserTaskUpdate from "./components/userTaskUpdate";
 
 import './App.css';
 
-const TaskPage = ({ tasks, currentTask, addTask, deleteTask, updateTask, handleUpdateClick, isAdmin, signOut }) => {
+const TaskPage = ({ 
+  tasks, 
+  currentTask, 
+  addTask, 
+  deleteTask, 
+  updateTask, 
+  handleUpdateClick, 
+  isAdmin, 
+  signOut 
+}) => {
   return (
     <div className="App">
-      {isAdmin && (
-        <div className="create-task">
-          <h2>Create Task</h2>
-          <CreateTask onCreate={addTask} />
-          {currentTask && (
-            <div>
-              <h2>Update Task</h2>
-              <UpdateTask task={currentTask} onUpdate={updateTask} />
-            </div>
-          )}
-        </div>
-      )}
-      <div className="task-list">
-        <h1>Task List</h1>
-        <button className="button" onClick={signOut}>Sign Out</button>
-        <TaskList
+      {isAdmin ? (
+        <>
+          {/* Admin-only Create and Update Task components */}
+          <div className="create-task">
+            <h2>Create Task</h2>
+            <CreateTask onCreate={addTask} />
+            {currentTask && (
+              <div>
+                <h2>Update Task</h2>
+                <UpdateTask task={currentTask} onUpdate={updateTask} />
+              </div>
+            )}
+          </div>
+
+          {/* Admin-only Task List */}
+          <div className="task-list">
+            <h1>Task List</h1>
+            <button className="button" onClick={signOut}>Sign Out</button>
+            <TaskList
+              tasks={tasks}
+              onDelete={deleteTask}  
+              onUpdate={handleUpdateClick} 
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <button className="buton" onClick={signOut}>Sign Out</button>
+
+          {/* Components for non-admin users */}
+          <UserList 
           tasks={tasks}
-          onDelete={isAdmin ? deleteTask : null}
-          onUpdate={isAdmin ? handleUpdateClick : null}
-        />
-      </div>
+          onUpdate={handleUpdateClick} 
+          />
+          {currentTask && (
+              <div>
+                <h2>Update Task</h2>
+                <UserTaskUpdate task={currentTask} onUpdate={updateTask} />
+              </div>
+            )}
+        </>
+      )}
     </div>
   );
 };
@@ -56,17 +87,24 @@ function App() {
     if (auth.isAuthenticated) {
       const decodedToken = jwtDecode(auth.user.id_token);
       const groups = decodedToken["cognito:groups"] || [];
-      if (groups.includes("admin")){
+      console.log("Groups:", groups);  
+  
+      // Make sure the check is correct
+      if (groups.includes("admin")) {
+        console.log("User is an admin");
         setIsAdmin(true);
+      } else {
+        console.log("User is not an admin");
       }
     }
   }, [auth.isAuthenticated, auth.user]);
-
+  
   const fetchTasks = async () => {
     if (!auth.isAuthenticated) return;
   
     try {
       let response;
+      console.log(isAdmin)
   
       if (isAdmin) {
         // Admin fetches all tasks
@@ -92,6 +130,7 @@ function App() {
       }
   
       setTasks(response.data.tasks || []);
+      console.log(response)
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
@@ -139,8 +178,6 @@ function App() {
   };
 
   const updateTask = async (updatedTask) => {
-    if (!isAdmin) return;
-
     try {
       await axios.put(
         "https://u9yel048j4.execute-api.eu-west-1.amazonaws.com/updateTask",

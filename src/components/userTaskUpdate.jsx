@@ -60,17 +60,13 @@ const UserTaskUpdate = ({ task, onUpdate }) => {
         <input
           type="text"
           value={title}
-          required
         />
         <textarea
           value={description}
-          required
         />
         <input
           type="date"
           value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-          required
         />
         <select
           value={status}
@@ -81,18 +77,9 @@ const UserTaskUpdate = ({ task, onUpdate }) => {
           <option value="Completed">Completed</option>
         </select>
 
-        <select
+        <input
           value={assignedUser}
-          onChange={(e) => setAssignedUser(e.target.value)}
-          required
-        >
-          <option value="">Select User</option>
-          {users.map((user) => (
-            <option key={user.email} value={user.email}>
-              {user.username} {user.email}
-            </option>
-          ))}
-        </select>
+        />
         <button type="submit">Update Task</button>
       </form>
     </div>

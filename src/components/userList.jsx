@@ -1,6 +1,6 @@
 import React from "react";
 
-const UserList = ({ tasks, onDelete, onUpdate }) => {
+const UserList = ({ tasks, onUpdate }) => {
   return (
     <div>
       <h2>Task List</h2>
