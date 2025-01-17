@@ -1,17 +1,16 @@
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "react-oidc-context";
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import CreateTask from "./components/create";
 import UpdateTask from "./components/update";
 import TaskList from "./components/taskList";
 import UserList from "./components/userList";
 import UserTaskUpdate from "./components/userTaskUpdate";
-
 import './App.css';
 
-const TaskPage = ({ 
+function TaskPage({ 
   tasks, 
   currentTask, 
   addTask, 
@@ -19,55 +18,73 @@ const TaskPage = ({
   updateTask, 
   handleUpdateClick, 
   isAdmin, 
-  signOut 
-}) => {
+  signOut, 
+  isLoading 
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
   return (
-    <div className="App">
-      {isAdmin ? (
-        <>
-          {/* Admin-only Create and Update Task components */}
-          <div className="create-task">
-            <h2>Create Task</h2>
-            <CreateTask onCreate={addTask} />
-            {currentTask && (
-              <div>
-                <h2>Update Task</h2>
-                <UpdateTask task={currentTask} onUpdate={updateTask} />
+    <div>
+      <div className="navbar">
+        <h1>Task Management</h1>
+        <div className="navbar-buttons">
+          {isAdmin && (
+            <button className="button" onClick={toggleModal}>Create Task</button>
+          )}
+          <button className="button" onClick={signOut}>Sign Out</button>
+        </div>
+      </div>
+      <div className="App">
+        <div className="content">
+          {isLoading ? (
+            <div className="loading">Loading...</div>
+          ) : isAdmin ? (
+            <>
+              <div className="task-list">
+                <TaskList
+                  tasks={tasks}
+                  onDelete={deleteTask}  
+                  onUpdate={handleUpdateClick} 
+                />
               </div>
-            )}
-          </div>
-
-          {/* Admin-only Task List */}
-          <div className="task-list">
-            <h1>Task List</h1>
-            <button className="button" onClick={signOut}>Sign Out</button>
-            <TaskList
-              tasks={tasks}
-              onDelete={deleteTask}  
-              onUpdate={handleUpdateClick} 
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <button className="buton" onClick={signOut}>Sign Out</button>
-
-          {/* Components for non-admin users */}
-          <UserList 
-          tasks={tasks}
-          onUpdate={handleUpdateClick} 
-          />
-          {currentTask && (
-              <div>
-                <h2>Update Task</h2>
-                <UserTaskUpdate task={currentTask} onUpdate={updateTask} />
-              </div>
-            )}
-        </>
-      )}
+              {currentTask && (
+                <div>
+                  <h2>Update Task</h2>
+                  <UpdateTask task={currentTask} onUpdate={updateTask} />
+                </div>
+              )}
+              {isModalOpen && (
+                <div className="modal-overlay" onClick={toggleModal}>
+                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <button className="close-button" onClick={toggleModal}>X</button>
+                    <CreateTask onCreate={addTask} />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <UserList 
+                tasks={tasks}
+                onUpdate={handleUpdateClick} 
+              />
+              {currentTask && (
+                <div>
+                  <h2>Update Task</h2>
+                  <UserTaskUpdate task={currentTask} onUpdate={updateTask} />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 
 function App() {
@@ -81,33 +98,33 @@ function App() {
 
   const [tasks, setTasks] = useState([]);
   const [currentTask, setCurrentTask] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (auth.isAuthenticated) {
+  const isAdmin = useMemo(() => {
+    if (auth.isAuthenticated && auth.user) {
       const decodedToken = jwtDecode(auth.user.id_token);
       const groups = decodedToken["cognito:groups"] || [];
-      console.log("Groups:", groups);  
-  
-      // Make sure the check is correct
-      if (groups.includes("admin")) {
-        console.log("User is an admin");
-        setIsAdmin(true);
-      } else {
-        console.log("User is not an admin");
-      }
+      
+      return groups.includes("admin");
     }
+    return false; 
   }, [auth.isAuthenticated, auth.user]);
+
+  useEffect(() => {
+  }, [isAdmin]);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
   
   const fetchTasks = async () => {
     if (!auth.isAuthenticated) return;
   
+    setIsLoading(true);
     try {
       let response;
-      console.log(isAdmin)
   
       if (isAdmin) {
-        // Admin fetches all tasks
         response = await axios.get(
           "https://xe2szfp9ji.execute-api.eu-west-1.amazonaws.com/get-tasks",
           {
@@ -117,7 +134,6 @@ function App() {
           }
         );
       } else {
-        // Regular users fetch their own tasks
         const email = auth.user?.profile.email;
         response = await axios.get(
           `https://xe2szfp9ji.execute-api.eu-west-1.amazonaws.com/get-tasks?email=${email}`,
@@ -130,9 +146,10 @@ function App() {
       }
   
       setTasks(response.data.tasks || []);
-      console.log(response)
     } catch (error) {
       console.error("Error fetching tasks:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -144,6 +161,7 @@ function App() {
   const addTask = async (newTask) => {
     if (!isAdmin) return;
 
+    setIsLoading(true);
     try {
       const response = await axios.post(
         "https://s2wth2ph3k.execute-api.eu-west-1.amazonaws.com/createTasks",
@@ -158,12 +176,15 @@ function App() {
       setTasks((prevTasks) => [...prevTasks, createdTask]);
     } catch (error) {
       console.error("Error creating task:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const deleteTask = async (taskId) => {
     if (!isAdmin) return;
 
+    setIsLoading(true);
     try {
       await axios.delete("https://zizj83kr4f.execute-api.eu-west-1.amazonaws.com/deleteTask", {
         data: { id: taskId },
@@ -174,10 +195,13 @@ function App() {
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
     } catch (error) {
       console.error("Error deleting task:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const updateTask = async (updatedTask) => {
+    setIsLoading(true);
     try {
       await axios.put(
         "https://u9yel048j4.execute-api.eu-west-1.amazonaws.com/updateTask",
@@ -196,6 +220,8 @@ function App() {
       setCurrentTask(null);
     } catch (error) {
       console.error("Error updating task:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -213,34 +239,36 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/tasks"
-          element={
-            <TaskPage
-              tasks={tasks}
-              currentTask={currentTask}
-              addTask={addTask}
-              deleteTask={deleteTask}
-              updateTask={updateTask}
-              handleUpdateClick={handleUpdateClick}
-              isAdmin={isAdmin}
-              signOut={signOutRedirect} // Pass the signoutRedirect method
-            />
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <div className="notAuthenticated">
-              <button className="button" onClick={() => auth.signinRedirect()}>Sign In</button>
-              {/* <button  className="button" onClick={() => auth.signoutRedirect()}>Sign Out</button> */}
-            </div>
-          }
-        />
-      </Routes>
-    </Router>
+    <>
+      <Router>
+        <Routes>
+          <Route
+            path="/tasks"
+            element={
+              <TaskPage
+                tasks={tasks}
+                currentTask={currentTask}
+                addTask={addTask}
+                deleteTask={deleteTask}
+                updateTask={updateTask}
+                handleUpdateClick={handleUpdateClick}
+                isAdmin={isAdmin}
+                signOut={signOutRedirect}
+                isLoading={isLoading}
+              />
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <div className="notAuthenticated">
+                <button className="button" onClick={() => auth.signinRedirect()}>Sign In</button>
+              </div>
+            }
+          />
+        </Routes>
+      </Router>
+    </>
   );
 }
 
