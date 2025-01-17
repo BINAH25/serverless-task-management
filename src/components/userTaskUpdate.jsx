@@ -8,6 +8,8 @@ const UserTaskUpdate = ({ task, onUpdate }) => {
   const [status, setStatus] = useState(task.status);
   const [users, setUsers] = useState([]);  
   const [assignedUser, setAssignedUser] = useState(task?.user);
+  const [id, setId] = useState(task?.id);
+
 
   useEffect(() => {
     setTitle(task.title);
@@ -19,7 +21,7 @@ const UserTaskUpdate = ({ task, onUpdate }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const updatedTask = { ...task, title, description, deadline, status, assignedUser };
+    const updatedTask = {id,title, deadline, status, assignedUser };
     onUpdate(updatedTask);
   };
 
