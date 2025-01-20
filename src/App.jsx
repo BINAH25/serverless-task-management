@@ -91,7 +91,7 @@ function App() {
   const auth = useAuth();
   const signOutRedirect = () => {
     const clientId = "39hbuk21og9eem43kqcbjahntj";
-    const logoutUri = "http://localhost:5173/";
+    const logoutUri = "https://main.ddd5qcl8obvzi.amplifyapp.com/";
     const cognitoDomain = "https://eu-west-1ow8e4f5yr.auth.eu-west-1.amazoncognito.com";
     window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
   };
