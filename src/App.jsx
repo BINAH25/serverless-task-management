@@ -262,7 +262,13 @@ function App() {
             path="/"
             element={
               <div className="notAuthenticated">
-                <button className="button" onClick={() => auth.signinRedirect()}>Sign In</button>
+                <div className="sign-in-container">
+                  <h2>Welcome Back!</h2>
+                  <p>Please sign in to access your tasks.</p>
+                  <button className="sign-in-button" onClick={() => auth.signinRedirect()}>
+                    Sign In
+                  </button>
+                </div>
               </div>
             }
           />
